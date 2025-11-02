@@ -12,6 +12,10 @@
 					"name": "origen1"
 				},
 				{
+					"dataset": {
+						"referenceName": "ds_dim_clientes_silver",
+						"type": "DatasetReference"
+					},
 					"name": "origen2"
 				},
 				{
@@ -29,6 +33,9 @@
 				},
 				{
 					"name": "join1"
+				},
+				{
+					"name": "join2"
 				}
 			],
 			"scriptLines": [
@@ -46,7 +53,9 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false) ~> origen1",
 				"source(allowSchemaDrift: true,",
-				"     validateSchema: false) ~> origen2",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> origen2",
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
@@ -60,7 +69,12 @@
 				"     joinType:'inner',",
 				"     matchType:'exact',",
 				"     ignoreSpaces: false,",
-				"     broadcast: 'auto')~> join1"
+				"     broadcast: 'auto')~> join1",
+				"join1, origen3 join(ERROR_FUNCTION('') == ERROR_FUNCTION(''),",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join2"
 			]
 		}
 	}

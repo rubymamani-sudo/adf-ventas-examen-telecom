@@ -1,5 +1,5 @@
 {
-	"name": "ds_silver_productos",
+	"name": "ds_dim_clientes_silver",
 	"properties": {
 		"linkedServiceName": {
 			"referenceName": "ls_sa_examen_bronzeSilver",
@@ -13,7 +13,7 @@
 		"typeProperties": {
 			"location": {
 				"type": "AzureBlobStorageLocation",
-				"fileName": "part-00000-1ad627ff-5bc5-4f2a-8435-0648cf95a1cc-c000.snappy.parquet",
+				"fileName": "_SUCCESS",
 				"folderPath": "silver/dim-productos",
 				"container": "silver-examen"
 			},
