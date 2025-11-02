@@ -1,0 +1,23 @@
+{
+	"name": "ds_silver_productos",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_sa_examen_bronzeSilver",
+			"type": "LinkedServiceReference"
+		},
+		"folder": {
+			"name": "silver"
+		},
+		"annotations": [],
+		"type": "Parquet",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"folderPath": "silver/dim-productos",
+				"container": "silver-examen"
+			},
+			"compressionCodec": "snappy"
+		},
+		"schema": []
+	}
+}

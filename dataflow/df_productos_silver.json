@@ -1,0 +1,99 @@
+{
+	"name": "df_productos_silver",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dim_productos",
+						"type": "DatasetReference"
+					},
+					"name": "origen1"
+				},
+				{
+					"dataset": {
+						"referenceName": "dim_productos_CAT_MAN",
+						"type": "DatasetReference"
+					},
+					"name": "origen2"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_productos",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "join1"
+				},
+				{
+					"name": "select1"
+				},
+				{
+					"name": "derivedColumn5"
+				},
+				{
+					"name": "derivedColumn6"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          prd_id as string,",
+				"          prd_key as string,",
+				"          prd_nm as string,",
+				"          prd_cost as string,",
+				"          prd_line as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> origen1",
+				"source(output(",
+				"          ID as string,",
+				"          CAT as string,",
+				"          SUBCAT as string,",
+				"          MAINTENANCE as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> origen2",
+				"origen1 derive(prd_key = substring(prd_key, 1, 5)) ~> derivedColumn1",
+				"derivedColumn1, derivedColumn5 join(prd_key == ID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> join1",
+				"derivedColumn6 select(mapColumn(",
+				"          prd_id,",
+				"          prd_key,",
+				"          prd_nm,",
+				"          prd_cost,",
+				"          prd_line,",
+				"          Categoria = CAT,",
+				"          Subcategoria = SUBCAT,",
+				"          Requiere_Mantenimiento = MAINTENANCE",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"origen2 derive(ID = replace(ID, '_', '-')) ~> derivedColumn5",
+				"join1 derive(prd_nm = trim(prd_nm),",
+				"          MAINTENANCE = iif(MAINTENANCE == 'Yes', 'Si','No'),",
+				"          CAT = trim(CAT),",
+				"          SUBCAT = trim(SUBCAT)) ~> derivedColumn6",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}
