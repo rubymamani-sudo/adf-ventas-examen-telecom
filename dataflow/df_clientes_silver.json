@@ -1,0 +1,118 @@
+{
+	"name": "df_clientes_silver",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "dim_clientes",
+						"type": "DatasetReference"
+					},
+					"name": "origen1"
+				},
+				{
+					"dataset": {
+						"referenceName": "dim_cliente_BD_GEN",
+						"type": "DatasetReference"
+					},
+					"name": "origen2"
+				},
+				{
+					"dataset": {
+						"referenceName": "dim_clientes_location",
+						"type": "DatasetReference"
+					},
+					"name": "origen3"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "ds_silver_clientes",
+						"type": "DatasetReference"
+					},
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "jbdgen"
+				},
+				{
+					"name": "jlocation"
+				},
+				{
+					"name": "derivedColumn3"
+				},
+				{
+					"name": "select1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          cst_id as string,",
+				"          cst_key as string,",
+				"          cst_firstname as string,",
+				"          cst_lastname as string,",
+				"          cst_marital_status as string,",
+				"          cst_gndr as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> origen1",
+				"source(output(",
+				"          CID as string,",
+				"          BDATE as string,",
+				"          GEN as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> origen2",
+				"source(output(",
+				"          CID as string,",
+				"          CNTRY as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> origen3",
+				"origen2 derive(CID = substring(CID, 4, length(CID)-3)) ~> derivedColumn1",
+				"origen3 derive(CID = replace(CID, 'AW-', 'AW')) ~> derivedColumn2",
+				"origen1, derivedColumn1 join(cst_key == CID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> jbdgen",
+				"jbdgen, derivedColumn2 join(cst_key == derivedColumn2@CID,",
+				"     joinType:'inner',",
+				"     matchType:'exact',",
+				"     ignoreSpaces: false,",
+				"     broadcast: 'auto')~> jlocation",
+				"jlocation derive(cst_firstname = trim(cst_firstname) + ' ' + trim(cst_lastname),",
+				"          cst_gndr = iif(isNull(cst_gndr) || length(trim(cst_gndr)) == 0, substring(GEN, 1, 1), cst_gndr),",
+				"          BDATE = toTimestamp(BDATE, 'yyyy-MM-dd')) ~> derivedColumn3",
+				"derivedColumn3 select(mapColumn(",
+				"          cst_id,",
+				"          cst_key,",
+				"          Nombre_Completo = cst_firstname,",
+				"          Genero = cst_gndr,",
+				"          Fecha_de_Nacimiento = BDATE,",
+				"          Pais = CNTRY",
+				"     ),",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> select1",
+				"select1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'parquet',",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}
